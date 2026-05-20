@@ -22,23 +22,8 @@ export type JobResponse = {
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
 
-function getToken(): string | null {
-  if (typeof window === "undefined") {
-    return null;
-  }
-  return localStorage.getItem("access_token");
-}
-
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const token = getToken();
-  const headers = new Headers(init?.headers || {});
-  if (token) {
-    headers.set("Authorization", `Bearer ${token}`);
-  }
-  const response = await fetch(`${API_BASE}${path}`, {
-    ...init,
-    headers,
-  });
+  const response = await fetch(`${API_BASE}${path}`, init);
   if (!response.ok) {
     const message = await response.text();
     throw new Error(message || "Request failed");
@@ -66,13 +51,11 @@ export async function uploadPart(
 ): Promise<void> {
   const form = new FormData();
   form.append("file", blob);
-  const token = getToken();
   const response = await fetch(
     `${API_BASE}/uploads/${uploadId}/parts?part_number=${partNumber}`,
     {
       method: "POST",
       body: form,
-      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     },
   );
   if (!response.ok) {
@@ -123,30 +106,10 @@ export type Analytics = {
 };
 
 export async function fetchAnalytics(jobId: string): Promise<Analytics> {
-  const token = getToken();
-  const response = await fetch(`${API_BASE}/jobs/${jobId}/analytics`, {
-    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-  });
+  const response = await fetch(`${API_BASE}/jobs/${jobId}/analytics`);
   if (!response.ok) {
     const message = await response.text();
     throw new Error(message || "Analytics not available");
   }
   return response.json();
-}
-
-export async function login(email: string, password: string): Promise<string> {
-  const response = await fetch(`${API_BASE}/auth/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
-  });
-  if (!response.ok) {
-    const message = await response.text();
-    throw new Error(message || "Login failed");
-  }
-  const data = (await response.json()) as { access_token: string };
-  if (typeof window !== "undefined") {
-    localStorage.setItem("access_token", data.access_token);
-  }
-  return data.access_token;
 }

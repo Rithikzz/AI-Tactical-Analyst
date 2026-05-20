@@ -6,7 +6,6 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import FileResponse
 
 from ..db import get_job, list_jobs
-from ..deps_auth import get_current_user
 from ..schemas import JobResponse
 
 
@@ -16,7 +15,6 @@ router = APIRouter(prefix="/jobs", tags=["jobs"])
 @router.get("/{job_id}", response_model=JobResponse)
 async def get_job_status(
     job_id: str,
-    _user: dict = Depends(get_current_user),
 ) -> JobResponse:
     job = get_job(job_id)
     if not job:
@@ -37,7 +35,6 @@ async def get_job_status(
 @router.get("", response_model=list[JobResponse])
 async def get_jobs(
     limit: int = Query(50, ge=1, le=200),
-    _user: dict = Depends(get_current_user),
 ) -> list[JobResponse]:
     jobs = list_jobs(limit=limit)
     return [
@@ -59,7 +56,6 @@ async def get_jobs(
 @router.get("/{job_id}/analytics")
 async def get_job_analytics(
     job_id: str,
-    _user: dict = Depends(get_current_user),
 ) -> FileResponse:
     job = get_job(job_id)
     if not job:
@@ -73,7 +69,6 @@ async def get_job_analytics(
 @router.get("/{job_id}/output")
 async def get_job_output(
     job_id: str,
-    _user: dict = Depends(get_current_user),
 ) -> FileResponse:
     job = get_job(job_id)
     if not job:

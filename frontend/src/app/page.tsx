@@ -12,7 +12,6 @@ import {
   type Job,
   type Analytics,
   type AnalyticsEvent,
-  login,
 } from "@/lib/api";
 
 type UploadState =
@@ -29,32 +28,9 @@ export default function Home() {
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [youtubeUrl, setYouTubeUrl] = useState("");
   const [liveUrl, setLiveUrl] = useState("");
-  const [email, setEmail] = useState("admin@local");
-  const [password, setPassword] = useState("admin123");
-  const [token, setToken] = useState<string | null>(() => {
-    if (typeof window === "undefined") {
-      return null;
-    }
-    return localStorage.getItem("access_token");
-  });
-  const [authError, setAuthError] = useState<string | null>(null);
 
-  const handleLogin = useCallback(async () => {
-    try {
-      const newToken = await login(email, password);
-      setToken(newToken);
-      setAuthError(null);
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Login failed.";
-      setAuthError(message);
-    }
-  }, [email, password]);
 
   const handleUpload = useCallback(async () => {
-    if (!token) {
-      setUploadState({ status: "error", message: "Login required." });
-      return;
-    }
     if (!file) {
       setUploadState({ status: "error", message: "Please select a file." });
       return;
@@ -90,13 +66,9 @@ export default function Home() {
         message,
       });
     }
-  }, [file, token]);
+  }, [file]);
 
   const handleYouTube = useCallback(async () => {
-    if (!token) {
-      setUploadState({ status: "error", message: "Login required." });
-      return;
-    }
     if (!youtubeUrl) {
       setUploadState({ status: "error", message: "Enter a YouTube URL." });
       return;
@@ -113,13 +85,9 @@ export default function Home() {
         message,
       });
     }
-  }, [youtubeUrl, token]);
+  }, [youtubeUrl]);
 
   const handleLive = useCallback(async () => {
-    if (!token) {
-      setUploadState({ status: "error", message: "Login required." });
-      return;
-    }
     if (!liveUrl) {
       setUploadState({ status: "error", message: "Enter a live stream URL." });
       return;
@@ -136,7 +104,7 @@ export default function Home() {
         message,
       });
     }
-  }, [liveUrl, token]);
+  }, [liveUrl]);
 
   useEffect(() => {
     if (!job?.id) {
@@ -164,8 +132,7 @@ export default function Home() {
     fetchJob();
 
     const apiBase = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
-    const wsUrl =
-      apiBase.replace("http", "ws") + `/ws/jobs/${job.id}?token=${token ?? ""}`;
+    const wsUrl = apiBase.replace("http", "ws") + `/ws/jobs/${job.id}`;
     ws = new WebSocket(wsUrl);
     ws.onmessage = async (event) => {
       try {
@@ -186,7 +153,7 @@ export default function Home() {
       isActive = false;
       ws?.close();
     };
-  }, [job?.id, token]);
+  }, [job?.id]);
 
   const summaryStats = useMemo(() => {
     const summary = analytics?.summary || {};
@@ -217,35 +184,6 @@ export default function Home() {
 
       <main className="mx-auto grid w-full max-w-6xl gap-6 px-6 py-8 lg:grid-cols-[360px_1fr]">
         <section className="flex flex-col gap-6">
-          <div className="rounded-2xl border border-white/10 bg-zinc-900/60 p-6">
-            <h2 className="text-lg font-semibold">Authentication</h2>
-            <p className="mt-2 text-sm text-white/60">
-              Use the admin credentials or your own account.
-            </p>
-            <div className="mt-4 space-y-3">
-              <input
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                placeholder="Email"
-                className="w-full rounded-lg border border-white/10 bg-zinc-950 px-3 py-2 text-sm"
-              />
-              <input
-                value={password}
-                type="password"
-                onChange={(event) => setPassword(event.target.value)}
-                placeholder="Password"
-                className="w-full rounded-lg border border-white/10 bg-zinc-950 px-3 py-2 text-sm"
-              />
-              <button
-                onClick={handleLogin}
-                className="w-full rounded-lg bg-emerald-400 px-4 py-2 text-sm font-medium text-zinc-900"
-              >
-                {token ? "Re-authenticate" : "Login"}
-              </button>
-              {authError && <p className="text-sm text-red-400">{authError}</p>}
-              {token && <p className="text-xs text-white/50">Token active.</p>}
-            </div>
-          </div>
           <div className="rounded-2xl border border-white/10 bg-zinc-900/60 p-6">
             <h2 className="text-lg font-semibold">Ingest a match</h2>
             <p className="mt-2 text-sm text-white/60">
@@ -346,6 +284,7 @@ export default function Home() {
                 <p>Stage: {job.stage}</p>
                 <p>Status: {job.status}</p>
                 <p>Progress: {job.progress}%</p>
+                {job.error && <p className="text-red-400 text-xs mt-1">Error: {job.error}</p>}
               </div>
             ) : (
               <p className="mt-3 text-sm text-white/60">No job selected.</p>

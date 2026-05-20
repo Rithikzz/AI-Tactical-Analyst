@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
 
-from ..auth import decode_token
 from ..db import get_job
 from ..deps import get_ws_manager
 from ..ws import WebSocketManager
@@ -17,15 +16,6 @@ async def job_updates(
     job_id: str,
     manager: WebSocketManager = Depends(get_ws_manager),
 ) -> None:
-    token = websocket.query_params.get("token")
-    if not token:
-        await websocket.close(code=4401)
-        return
-    try:
-        decode_token(token)
-    except Exception:
-        await websocket.close(code=4401)
-        return
     await manager.connect(job_id, websocket)
     try:
         job = get_job(job_id)

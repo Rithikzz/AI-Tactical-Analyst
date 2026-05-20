@@ -7,7 +7,6 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from ..db import create_job
 from ..deps import get_queue
-from ..deps_auth import get_current_user
 from ..queue import JobQueue
 from ..schemas import JobCreateResponse, JobResponse, LiveIngestRequest, YouTubeIngestRequest
 
@@ -23,7 +22,6 @@ YOUTUBE_PATTERN = re.compile(
 async def ingest_youtube(
     payload: YouTubeIngestRequest,
     queue: JobQueue = Depends(get_queue),
-    _user: dict = Depends(get_current_user),
 ) -> JobCreateResponse:
     if not YOUTUBE_PATTERN.match(str(payload.url)):
         raise HTTPException(status_code=400, detail="Invalid YouTube URL.")
@@ -37,7 +35,6 @@ async def ingest_youtube(
 async def ingest_live(
     payload: LiveIngestRequest,
     queue: JobQueue = Depends(get_queue),
-    _user: dict = Depends(get_current_user),
 ) -> JobCreateResponse:
     url_str = str(payload.url)
     if not url_str.startswith(("rtmp://", "srt://", "http://", "https://")):

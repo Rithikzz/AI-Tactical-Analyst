@@ -2,3 +2,6 @@
 input_service/var/
 frontend/.next/
 frontend/node_modules/
+__pycache__/
+*.pyc
+*.pyo

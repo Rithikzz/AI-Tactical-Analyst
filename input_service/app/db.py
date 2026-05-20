@@ -20,17 +20,6 @@ def init_db() -> None:
     with _LOCK, _connect() as conn:
         conn.execute(
             """
-            CREATE TABLE IF NOT EXISTS users (
-                id TEXT PRIMARY KEY,
-                email TEXT NOT NULL UNIQUE,
-                password_hash TEXT NOT NULL,
-                role TEXT NOT NULL,
-                created_at TEXT NOT NULL
-            )
-            """
-        )
-        conn.execute(
-            """
             CREATE TABLE IF NOT EXISTS uploads (
                 id TEXT PRIMARY KEY,
                 filename TEXT NOT NULL,
@@ -232,24 +221,4 @@ def list_jobs(limit: int = 50) -> List[Dict]:
         return [dict(zip(columns, row)) for row in rows]
 
 
-def create_user(user_id: str, email: str, password_hash: str, role: str) -> None:
-    now = datetime.utcnow().isoformat()
-    with _LOCK, _connect() as conn:
-        conn.execute(
-            """
-            INSERT INTO users (id, email, password_hash, role, created_at)
-            VALUES (?, ?, ?, ?, ?)
-            """,
-            (user_id, email, password_hash, role, now),
-        )
-        conn.commit()
 
-
-def get_user_by_email(email: str) -> Optional[Dict]:
-    with _LOCK, _connect() as conn:
-        cur = conn.execute("SELECT * FROM users WHERE email = ?", (email,))
-        row = cur.fetchone()
-        if not row:
-            return None
-        columns = [d[0] for d in cur.description]
-        return dict(zip(columns, row))

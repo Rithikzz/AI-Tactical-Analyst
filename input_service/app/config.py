@@ -24,12 +24,4 @@ QUEUE_WORKER_COUNT = 2
 MODEL_PATH = REPO_ROOT / "football_analysis" / "models" / "best.pt"
 LIVE_CAPTURE_SECONDS = 120
 
-JWT_SECRET = os.getenv("JWT_SECRET", "change-this-secret")
-JWT_ISSUER = os.getenv("JWT_ISSUER", "football-intel")
-JWT_EXP_MINUTES = int(os.getenv("JWT_EXP_MINUTES", "60"))
-
-ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "admin@local")
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "admin123")
-
-RATE_LIMIT_REQUESTS = int(os.getenv("RATE_LIMIT_REQUESTS", "120"))
-RATE_LIMIT_WINDOW_SECONDS = int(os.getenv("RATE_LIMIT_WINDOW_SECONDS", "60"))
+LIVE_CAPTURE_SECONDS = int(os.getenv("LIVE_CAPTURE_SECONDS", "120"))

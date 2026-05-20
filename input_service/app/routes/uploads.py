@@ -20,7 +20,6 @@ from ..db import (
     update_upload_status,
 )
 from ..deps import get_queue
-from ..deps_auth import get_current_user
 from ..queue import JobQueue
 from ..schemas import (
     JobCreateResponse,
@@ -49,7 +48,6 @@ def _validate_upload_request(req: UploadCreateRequest) -> None:
 @router.post("", response_model=UploadCreateResponse)
 async def create_upload_session(
     req: UploadCreateRequest,
-    _user: dict = Depends(get_current_user),
 ) -> UploadCreateResponse:
     _validate_upload_request(req)
     upload_id = uuid.uuid4().hex
@@ -70,7 +68,6 @@ async def create_upload_session(
 @router.get("/{upload_id}", response_model=UploadStatusResponse)
 async def get_upload_status(
     upload_id: str,
-    _user: dict = Depends(get_current_user),
 ) -> UploadStatusResponse:
     upload = get_upload(upload_id)
     if not upload:
@@ -95,7 +92,6 @@ async def upload_part(
     upload_id: str,
     part_number: int = Query(..., ge=1),
     file: UploadFile = File(...),
-    _user: dict = Depends(get_current_user),
 ) -> UploadPartResponse:
     upload = get_upload(upload_id)
     if not upload:
@@ -126,7 +122,6 @@ async def upload_part(
 async def complete_upload(
     upload_id: str,
     queue: JobQueue = Depends(get_queue),
-    _user: dict = Depends(get_current_user),
 ) -> JobCreateResponse:
     upload = get_upload(upload_id)
     if not upload:

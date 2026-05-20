@@ -7,11 +7,14 @@ import numpy as np
 
 from .config import MODEL_PATH, REPO_ROOT
 
-# Ensure repo root on sys.path for football_analysis imports
+# Ensure repo root and football_analysis on sys.path for imports
 import sys
 
 if str(REPO_ROOT) not in sys.path:
     sys.path.append(str(REPO_ROOT))
+FOOTBALL_ANALYSIS_PATH = str(REPO_ROOT / "football_analysis")
+if FOOTBALL_ANALYSIS_PATH not in sys.path:
+    sys.path.append(FOOTBALL_ANALYSIS_PATH)
 
 from football_analysis.camera_movement_estimator import CameraMovementEstimator
 from football_analysis.game_intelligence import analyze_match
