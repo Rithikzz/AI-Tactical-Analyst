@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 from datetime import datetime
 from pathlib import Path
@@ -61,16 +62,16 @@ class JobProcessor:
             input_path = Path(job["source_ref"])
         elif job["source_type"] == "youtube":
             await self._update(job_id, status="processing", stage="downloading", progress=20)
-            input_path = download_youtube(job["source_ref"], get_ingest_path(job_id, ".mp4"))
+            input_path = await asyncio.to_thread(download_youtube, job["source_ref"], get_ingest_path(job_id, ".mp4"))
         elif job["source_type"] == "live":
             await self._update(job_id, status="processing", stage="capturing", progress=20)
-            input_path = capture_live_stream(job["source_ref"], get_ingest_path(job_id, ".mp4"))
+            input_path = await asyncio.to_thread(capture_live_stream, job["source_ref"], get_ingest_path(job_id, ".mp4"))
 
         if input_path is None or not input_path.exists():
             raise FileNotFoundError("Input video is not available.")
 
         output_video = output_dir / f"{input_path.stem}_processed.avi"
-        output_video, analytics = run_full_pipeline(input_path, output_video)
+        output_video, analytics = await asyncio.to_thread(run_full_pipeline, input_path, output_video)
         output_video_path = str(output_video)
 
         analytics.update(

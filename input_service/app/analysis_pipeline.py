@@ -22,33 +22,8 @@ from football_analysis.player_ball_assigner import PlayerBallAssigner
 from football_analysis.speed_and_distance_estimator import SpeedAndDistance_Estimator
 from football_analysis.team_assigner import TeamAssigner
 from football_analysis.trackers import Tracker
-from football_analysis.utils.video_utils import get_video_fps, read_video, save_video
+from football_analysis.utils.video_utils import get_video_fps, read_video, save_video, align_pipeline_lengths
 from football_analysis.view_transformer import ViewTransformer
-
-
-def _align_pipeline_lengths(video_frames, tracks, camera_movement_per_frame):
-    players_len = len(tracks.get("players", []))
-    referees_len = len(tracks.get("referees", []))
-    ball_len = len(tracks.get("ball", []))
-    movement_len = len(camera_movement_per_frame)
-    frames_len = len(video_frames)
-
-    target_len = min(frames_len, players_len, referees_len, ball_len, movement_len)
-    if target_len <= 0:
-        raise ValueError("No valid frames to process after aligning video and tracking outputs.")
-
-    if target_len != frames_len:
-        video_frames = video_frames[:target_len]
-    if target_len != players_len:
-        tracks["players"] = tracks["players"][:target_len]
-    if target_len != referees_len:
-        tracks["referees"] = tracks["referees"][:target_len]
-    if target_len != ball_len:
-        tracks["ball"] = tracks["ball"][:target_len]
-    if target_len != movement_len:
-        camera_movement_per_frame = camera_movement_per_frame[:target_len]
-
-    return video_frames, tracks, camera_movement_per_frame
 
 
 def run_full_pipeline(video_path: Path, output_path: Path) -> Tuple[Path, Dict]:
@@ -73,7 +48,7 @@ def run_full_pipeline(video_path: Path, output_path: Path) -> Tuple[Path, Dict]:
         read_from_stub=False,
     )
 
-    video_frames, tracks, camera_movement_per_frame = _align_pipeline_lengths(
+    video_frames, tracks, camera_movement_per_frame = align_pipeline_lengths(
         video_frames,
         tracks,
         camera_movement_per_frame,
@@ -130,7 +105,7 @@ def run_full_pipeline(video_path: Path, output_path: Path) -> Tuple[Path, Dict]:
         output_video_frames, tracks
     )
 
-    save_video(output_video_frames, str(output_path))
+    save_video(output_video_frames, str(output_path), video_fps)
 
     analytics = analyze_match(tracks, team_ball_control, fps=video_fps, verbose=False)
     analytics["video_fps"] = video_fps

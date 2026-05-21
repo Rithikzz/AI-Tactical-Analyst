@@ -25,10 +25,15 @@ async def lifespan(app: FastAPI):
     await app.state.queue.stop()
 
 
+import os
+
+allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(",")
+allowed_origins = [o.strip() for o in allowed_origins if o.strip()]
+
 app = FastAPI(title="Football Input Service", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

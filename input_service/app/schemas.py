@@ -48,6 +48,20 @@ class JobResponse(BaseModel):
     output_video_path: Optional[str] = None
     analytics_path: Optional[str] = None
 
+    @classmethod
+    def from_db(cls, job: dict) -> JobResponse:
+        return cls(
+            id=job["id"],
+            source_type=job["source_type"],
+            source_ref=job["source_ref"],
+            status=job["status"],
+            stage=job["stage"],
+            progress=job["progress"],
+            error=job.get("error"),
+            output_video_path=job.get("output_video_path"),
+            analytics_path=job.get("analytics_path"),
+        )
+
 
 class JobCreateResponse(BaseModel):
     job: JobResponse

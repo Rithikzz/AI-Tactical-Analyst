@@ -19,17 +19,7 @@ async def get_job_status(
     job = get_job(job_id)
     if not job:
         raise HTTPException(status_code=404, detail="Job not found.")
-    return JobResponse(
-        id=job["id"],
-        source_type=job["source_type"],
-        source_ref=job["source_ref"],
-        status=job["status"],
-        stage=job["stage"],
-        progress=job["progress"],
-        error=job["error"],
-        output_video_path=job.get("output_video_path"),
-        analytics_path=job.get("analytics_path"),
-    )
+    return JobResponse.from_db(job)
 
 
 @router.get("", response_model=list[JobResponse])
@@ -37,20 +27,7 @@ async def get_jobs(
     limit: int = Query(50, ge=1, le=200),
 ) -> list[JobResponse]:
     jobs = list_jobs(limit=limit)
-    return [
-        JobResponse(
-            id=job["id"],
-            source_type=job["source_type"],
-            source_ref=job["source_ref"],
-            status=job["status"],
-            stage=job["stage"],
-            progress=job["progress"],
-            error=job["error"],
-            output_video_path=job.get("output_video_path"),
-            analytics_path=job.get("analytics_path"),
-        )
-        for job in jobs
-    ]
+    return [JobResponse.from_db(job) for job in jobs]
 
 
 @router.get("/{job_id}/analytics")

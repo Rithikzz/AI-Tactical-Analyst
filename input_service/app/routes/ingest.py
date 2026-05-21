@@ -5,7 +5,7 @@ import uuid
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from ..db import create_job
+from ..db import create_job, get_job
 from ..deps import get_queue
 from ..queue import JobQueue
 from ..schemas import JobCreateResponse, JobResponse, LiveIngestRequest, YouTubeIngestRequest
@@ -28,7 +28,10 @@ async def ingest_youtube(
     job_id = uuid.uuid4().hex
     create_job(job_id, source_type="youtube", source_ref=str(payload.url))
     await queue.enqueue(job_id)
-    return JobCreateResponse(job=_job_response(job_id))
+    job = get_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found.")
+    return JobCreateResponse(job=JobResponse.from_db(job))
 
 
 @router.post("/live", response_model=JobCreateResponse)
@@ -42,23 +45,7 @@ async def ingest_live(
     job_id = uuid.uuid4().hex
     create_job(job_id, source_type="live", source_ref=url_str)
     await queue.enqueue(job_id)
-    return JobCreateResponse(job=_job_response(job_id))
-
-
-def _job_response(job_id: str) -> JobResponse:
-    from ..db import get_job
-
     job = get_job(job_id)
     if not job:
         raise HTTPException(status_code=404, detail="Job not found.")
-    return JobResponse(
-        id=job["id"],
-        source_type=job["source_type"],
-        source_ref=job["source_ref"],
-        status=job["status"],
-        stage=job["stage"],
-        progress=job["progress"],
-        error=job["error"],
-        output_video_path=job.get("output_video_path"),
-        analytics_path=job.get("analytics_path"),
-    )
+    return JobCreateResponse(job=JobResponse.from_db(job))

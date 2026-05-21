@@ -14,6 +14,7 @@ from ..db import (
     add_upload_part,
     create_job,
     create_upload,
+    get_job,
     get_upload,
     list_upload_parts,
     mark_upload_complete,
@@ -146,24 +147,7 @@ async def complete_upload(
     create_job(job_id, source_type="upload", source_ref=str(final_path))
     await queue.enqueue(job_id)
 
-    job = get_job_response(job_id)
-    return JobCreateResponse(job=job)
-
-
-def get_job_response(job_id: str) -> JobResponse:
-    from ..db import get_job
-
     job = get_job(job_id)
     if not job:
         raise HTTPException(status_code=404, detail="Job not found.")
-    return JobResponse(
-        id=job["id"],
-        source_type=job["source_type"],
-        source_ref=job["source_ref"],
-        status=job["status"],
-        stage=job["stage"],
-        progress=job["progress"],
-        error=job["error"],
-        output_video_path=job.get("output_video_path"),
-        analytics_path=job.get("analytics_path"),
-    )
+    return JobCreateResponse(job=JobResponse.from_db(job))

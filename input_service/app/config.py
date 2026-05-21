@@ -22,6 +22,11 @@ ALLOWED_MIME_PREFIXES = {"video/"}
 QUEUE_WORKER_COUNT = 2
 
 MODEL_PATH = REPO_ROOT / "football_analysis" / "models" / "best.pt"
-LIVE_CAPTURE_SECONDS = 120
-
 LIVE_CAPTURE_SECONDS = int(os.getenv("LIVE_CAPTURE_SECONDS", "120"))
+
+import logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    handlers=[logging.StreamHandler()]
+)
